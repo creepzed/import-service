@@ -9,7 +9,7 @@ configmap:
   KAFKA_BROKERS: 'pkc-3w22w.us-central1.gcp.confluent.cloud:9092'
   KAFKA_GROUP_ID: 'operation-mirakl'
   KAFKA_NEW_IMPORT_TOPIC: 'operation.cl.mirakl.import-file'
-  IMPORT_BUCKET: 'operation-mirakl'
+  IMPORT_BUCKET: 'operation-mirakl-cl-dev'
   SERVICE: 'import-service'
   VERSION: '0.1.0'
   SYSTEM: 'import'
