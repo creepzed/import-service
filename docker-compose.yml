@@ -2,15 +2,14 @@ version: '3.8'
 
 services:
   api:
-    build:
-      context: ./
-      target: builder
-    links:
-      - kafka:kafka
-    command: go run app/main.go
+    image: cosmtrek/air
+    # working_dir value has to be the same of mapped volume
+    working_dir: /app
     restart: always
     ports:
       - "8080:8080"
+    volumes:
+      - ./:/app
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
