@@ -1,12 +1,12 @@
 package mongodb
 
 import (
+	"bitbucket.org/ripleyx/import-service/app/shared/domain/exception"
+	"bitbucket.org/ripleyx/import-service/app/shared/infrastructure/log"
+	"bitbucket.org/ripleyx/import-service/app/shared/infrastructure/storage"
 	"context"
 	"errors"
 	"fmt"
-	"github.com/creepzed/url-shortener-service/app/shared/infrastructure/log"
-	"github.com/creepzed/url-shortener-service/app/shared/infrastructure/storage"
-	"github.com/creepzed/url-shortener-service/app/shortener/domain/exception"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"time"

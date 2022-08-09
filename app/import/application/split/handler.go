@@ -8,14 +8,14 @@ import (
 )
 
 type SplitCommandHandler struct {
-	applicationService SplitService
+	applicationService ImportSplitService
 }
 
 var (
 	ErrUnexpectedCommand = errors.New("unexpected command")
 )
 
-func NewSplitCommandHandler(applicationService SplitService) SplitCommandHandler {
+func NewSplitCommandHandler(applicationService ImportSplitService) SplitCommandHandler {
 	return SplitCommandHandler{
 		applicationService: applicationService,
 	}

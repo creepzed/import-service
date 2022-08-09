@@ -1,8 +1,9 @@
 package redisdb
 
 import (
+	"bitbucket.org/ripleyx/import-service/app/shared/infrastructure/utils"
 	"context"
-	"github.com/creepzed/url-shortener-service/app/shared/infrastructure/utils"
+
 	"time"
 )
 

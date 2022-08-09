@@ -21,3 +21,4 @@
 bulk
 .env
 vendor
+service_account/*

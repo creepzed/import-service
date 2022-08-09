@@ -1,8 +1,8 @@
 package redisdb
 
 import (
+	"bitbucket.org/ripleyx/import-service/app/shared/infrastructure/log"
 	"context"
-	"github.com/creepzed/url-shortener-service/app/shared/infrastructure/log"
 	"github.com/go-redis/redis"
 	"strconv"
 )

@@ -21,13 +21,13 @@ func NewShopFilename(value string) (shopFilename ShopFilename, err error) {
 	return
 }
 
-func (s *ShopFilename) hasError() error {
+func (s ShopFilename) hasError() error {
 	if s.value == "" {
 		return fmt.Errorf("%w: %s", ErrShopFilenameInvalid, s.value)
 	}
 	return nil
 }
 
-func (s *ShopFilename) Value() string {
+func (s ShopFilename) Value() string {
 	return s.value
 }

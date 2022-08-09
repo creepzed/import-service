@@ -13,9 +13,9 @@ func TestImport(t *testing.T) {
 		i, err := NewImport(filename)
 		require.NoError(t, err)
 
-		assert.Equal(t, i.importId.Value(), "1815492")
+		assert.Equal(t, i.externalImportId.Value(), "1815492")
 		assert.Equal(t, i.shopId.Value(), "2847")
-		assert.Equal(t, i.shopFile.Value(), filename)
+		assert.Equal(t, i.shopFilename.Value(), filename)
 
 	})
 }

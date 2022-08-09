@@ -21,13 +21,13 @@ func NewShopId(value string) (shopId ShopId, err error) {
 	return
 }
 
-func (s *ShopId) hasError() error {
+func (s ShopId) hasError() error {
 	if s.value == "" {
 		return fmt.Errorf("%w: %s", ErrShopIdInvalid, s.value)
 	}
 	return nil
 }
 
-func (s *ShopId) Value() string {
+func (s ShopId) Value() string {
 	return s.value
 }

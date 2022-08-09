@@ -21,7 +21,7 @@ func NewProductsFile(value string) (productsFile ProductsFile, err error) {
 	return
 }
 
-func (f *ProductsFile) hasError() error {
+func (f ProductsFile) hasError() error {
 	if f.value == "" {
 		return fmt.Errorf("%w: %s", ErrProductsFileInvalid, f.value)
 	}

@@ -4,10 +4,14 @@ import (
 	"bitbucket.org/ripleyx/import-service/app/import/application/split"
 	"bitbucket.org/ripleyx/import-service/app/import/infrastructure/queue/kafka/common"
 	"bitbucket.org/ripleyx/import-service/app/import/infrastructure/repository/cloudstorage"
+	"bitbucket.org/ripleyx/import-service/app/import/infrastructure/storage/postgres"
 	"bitbucket.org/ripleyx/import-service/app/import/infrastructure/subscriber"
 	"bitbucket.org/ripleyx/import-service/app/shared/infrastructure/bus/inmemory"
+	"bitbucket.org/ripleyx/import-service/app/shared/infrastructure/log"
 	"bitbucket.org/ripleyx/import-service/app/shared/infrastructure/rest"
 	"context"
+	"database/sql"
+	_ "github.com/lib/pq"
 	"net/http"
 	"os"
 	"os/signal"
@@ -27,22 +31,35 @@ var (
 	kafkaGroupId  = os.Getenv("KAFKA_GROUP_ID")
 
 	newImportTopic = os.Getenv("KAFKA_NEW_IMPORT_TOPIC")
+	uriDataBase    = os.Getenv("DATABASE_URI")
 )
 
 func main() {
 	server := rest.New()
-	objectRepository := cloudstorage.NewGetObjectRepository(bucket)
-	splitService := split.NewSplitService(objectRepository)
-	splitCommandHandler := split.NewSplitCommandHandler(splitService)
 	commandBus := inmemory.NewCommandBusMemory()
+
+	objectRepository := cloudstorage.NewGetObjectRepository(bucket)
+
+	conn, err := getConnection()
+	if err != nil {
+		log.Fatal("error trying to connected to db: %s", err.Error())
+	}
+
+	saveImportRepository := postgres.NewImportRepository(conn)
+
+	splitService := split.NewImportSplitService(objectRepository, saveImportRepository)
+	splitCommandHandler := split.NewSplitCommandHandler(splitService)
+
 	commandBus.Register(split.ImportSplitType, splitCommandHandler)
 
 	splitSubscriber := subscriber.NewSubscriberSplitter(
+		commandBus,
 		kafkaGroupId,
 		newImportTopic,
 		common.GetDialer(kafkaUsername, kafkaPassword),
 		kafkaBrokers...,
 	)
+
 	ctxSplitSubscriber, cancelSplitSubscriber := context.WithCancel(context.Background())
 	defer cancelSplitSubscriber()
 	go splitSubscriber.ReadMessage(ctxSplitSubscriber)
@@ -62,4 +79,8 @@ func main() {
 	if err := server.Shutdown(ctxServer); err != nil {
 		server.Logger.Fatal(err)
 	}
+}
+
+func getConnection() (*sql.DB, error) {
+	return sql.Open("postgres", uriDataBase)
 }

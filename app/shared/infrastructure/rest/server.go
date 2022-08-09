@@ -3,7 +3,7 @@ package rest
 import (
 	"bitbucket.org/ripleyx/import-service/app/shared/infrastructure/log"
 	"fmt"
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
 	"net/http"
 	"time"

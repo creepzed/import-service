@@ -1,6 +1,8 @@
 package subscriber
 
 import (
+	"bitbucket.org/ripleyx/import-service/app/import/application/split"
+	"bitbucket.org/ripleyx/import-service/app/shared/application/command"
 	"bitbucket.org/ripleyx/import-service/app/shared/infrastructure/log"
 	"context"
 	"encoding/json"
@@ -9,25 +11,28 @@ import (
 )
 
 type message struct {
-	EventId     string    `json:"eventId"`
+	EventId     string    `json:"event_id"`
 	EventType   string    `json:"event_type"`
 	AggregateId string    `json:"aggregate_id"`
 	OccurredOn  time.Time `json:"occurred_on"`
+	Filename    string    `json:"filename"`
 }
 
 type subscriberSplitter struct {
-	dialer  *kafka.Dialer
-	groupID string
-	brokers []string
-	topic   string
+	commandBus command.CommandBus
+	dialer     *kafka.Dialer
+	groupID    string
+	brokers    []string
+	topic      string
 }
 
-func NewSubscriberSplitter(groupID string, topic string, dialer *kafka.Dialer, brokers ...string) *subscriberSplitter {
+func NewSubscriberSplitter(commandBus command.CommandBus, groupID string, topic string, dialer *kafka.Dialer, brokers ...string) *subscriberSplitter {
 	return &subscriberSplitter{
-		dialer:  dialer,
-		groupID: groupID,
-		brokers: brokers,
-		topic:   topic,
+		commandBus: commandBus,
+		dialer:     dialer,
+		groupID:    groupID,
+		brokers:    brokers,
+		topic:      topic,
 	}
 }
 
@@ -52,7 +57,7 @@ func (s *subscriberSplitter) ReadMessage(ctx context.Context) {
 			log.Debug("shutting down subscriber")
 			return
 		default:
-			msg, err := reader.ReadMessage(ctx)
+			msg, err := reader.FetchMessage(ctx)
 			if err != nil {
 				log.WithError(err).Error("error reading kafka messages")
 				continue
@@ -61,20 +66,22 @@ func (s *subscriberSplitter) ReadMessage(ctx context.Context) {
 			err = json.Unmarshal(msg.Value, &payload)
 			if err != nil {
 				log.WithError(err).Error("error unmarshalling kafka messages")
+				//TODO: agregar Time sleep
 				continue
 			}
 
-			//doc := redis.UrlShortenerRedis{
-			//	UrlId:       payload.UrlId,
-			//	UrlEnable:   payload.UrlStatus,
-			//	OriginalUrl: payload.OriginUrl,
-			//	UserId:      payload.UserId,
-			//}
+			cmd := split.NewImportSplitCommand(payload.Filename)
 
-			//err = s.cache.Set(ctx, doc.UrlId, doc)
+			err = s.commandBus.Dispatch(ctx, cmd)
 			if err != nil {
-				log.WithError(err).Error("error saving on cache")
+				log.WithError(err).Error("error saving on import")
 				continue
+			}
+			//TODO: Validar si se guardo?
+			err = reader.CommitMessages(ctx, msg)
+			if err != nil {
+				log.WithError(err).
+					Fatal("%s error committing kafka message: %s", s.topic, err.Error())
 			}
 		}
 	}

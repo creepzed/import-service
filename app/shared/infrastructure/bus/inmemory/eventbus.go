@@ -1,7 +1,7 @@
 package inmemory
 
 import (
-	"bitbucket.org/ripleyx/import-service/app/shared/application/event"
+	"bitbucket.org/ripleyx/import-service/app/shared/domain/event"
 	"context"
 )
 
