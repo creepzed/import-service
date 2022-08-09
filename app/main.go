@@ -51,7 +51,6 @@ func main() {
 	splitCommandHandler := split.NewSplitCommandHandler(splitService)
 
 	commandBus.Register(split.ImportSplitType, splitCommandHandler)
-
 	splitSubscriber := subscriber.NewSubscriberSplitter(
 		commandBus,
 		kafkaGroupId,

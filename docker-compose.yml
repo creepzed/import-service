@@ -1,20 +1,16 @@
 version: '3.8'
 
 services:
-
-#  api:
-#    env_file:
-#      - .env
-#    build:
-#      context: ./
-#      target: production
-#    links:
-#      - kafka:kafka
-#    image: golang:service-app
-#    command: go run app/main.go
-#    restart: always
-#    ports:
-#      - "8080:8080"
+  api:
+    build:
+      context: ./
+      target: builder
+    links:
+      - kafka:kafka
+    command: go run app/main.go
+    restart: always
+    ports:
+      - "8080:8080"
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
