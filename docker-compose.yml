@@ -55,15 +55,13 @@ services:
     volumes:
       - postgres:/var/lib/postgresql
     ports:
-      - "${DOCKER_PORT_DATABASE_}:5432"
+      - "${DOCKER_PORT_DATABASE}:5432"
 
   adminer:
       image: adminer
       restart: always
       ports:
         - "${DOCKER_PORT_ADMINDB}:8080"
-      networks:
-        - backend-api
-  
+
 volumes:
   postgres:
