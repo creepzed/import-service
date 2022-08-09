@@ -21,5 +21,4 @@
 bulk
 .env
 vendor
-service_account/*
-tmp
+deployment
