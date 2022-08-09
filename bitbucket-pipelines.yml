@@ -1,0 +1,100 @@
+options:
+  docker: true
+  size: 2x
+
+definitions:
+  caches:
+    go: $GOPATH/pkg
+    sonar-cache: .sonar
+  services:
+    docker:
+      memory: 2048
+
+  steps:
+    - step: &sonar-scan
+        name: Run sonar scan
+        image: golang:1.14.6
+        caches:
+          - go
+          - sonar-cache
+        script:
+          - source bitbucket-pipelines-go.sh
+          - cd ${IMPORT_PATH}/app
+          - git config --global url."git@bitbucket.org:".insteadOf "https://bitbucket.org/"
+          - CGO_ENABLED=0 GOOS=linux go build -mod=vendor -a -installsuffix cgo -ldflags '-extldflags "-static"' -o ${GOPATH}/bin/main ./main.go
+          - go test ./... -coverprofile=${BITBUCKET_CLONE_DIR}/coverage.out -covermode=count -json > ${BITBUCKET_CLONE_DIR}/report.json
+          - go vet ./...
+          - pipe: sonarsource/sonarcloud-scan:1.2.1
+          - pipe: sonarsource/sonarcloud-quality-gate:0.1.4
+        artifacts:
+          - coverage.out
+          - report.json
+        services:
+          - docker
+
+    - step: &build-promote-image
+        name: Build or promote image
+        image:
+          name: gcr.io/sysops-gcr/pipeline/pipeline-promote-build-images:v0.0.1
+          username: _json_key
+          password: '$BITBUCKET_GCR_PULL'
+        script:
+          - cp /script.sh .
+          - sh script.sh
+    - step: &push-config-repo
+        name: Push to config repo
+        image:
+          name: gcr.io/sysops-gcr/pipeline/pipeline-push-to-config-repo:v0.0.6
+          username: _json_key
+          password: '$BITBUCKET_GCR_PULL'
+        script:
+          - cp /script.sh .
+          - sh script.sh
+
+pipelines:
+  pull-requests:
+    "**":
+      - step: *sonar-scan
+  branches:
+    dev:
+      - step:
+          <<: *build-promote-image
+          deployment: dev-build
+      - step:
+          <<: *push-config-repo
+          name: Push to config repo cl
+          deployment: dev-push-config-cl
+#      - step:
+#          <<: *push-config-repo
+#          name: Push to config repo pe
+#          deployment: dev-push-config-pe
+    qa:
+      - step:
+          <<: *build-promote-image
+          deployment: qa-build
+      - parallel:
+          - step:
+              <<: *push-config-repo
+              name: Push to config repo cl
+              trigger: manual
+              deployment: qa-push-config-cl
+          - step:
+              <<: *push-config-repo
+              name: Push to config repo pe
+              trigger: manual
+              deployment: qa-push-config-pe
+    prod:
+      - step:
+          <<: *build-promote-image
+          deployment: prd-build
+      - parallel:
+          - step:
+              <<: *push-config-repo
+              name: Push to config repo cl
+              trigger: manual
+              deployment: prd-push-config-cl
+          - step:
+              <<: *push-config-repo
+              name: Push to config repo pe
+              trigger: manual
+              deployment: prd-push-config-pe
