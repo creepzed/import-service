@@ -3,11 +3,14 @@ version: '3.8'
 services:
   api:
     image: cosmtrek/air
-    # working_dir value has to be the same of mapped volume
     working_dir: /app
     restart: always
     ports:
-      - "8080:8080"
+      - "${SERVER_PORT}:8080"
+    healthcheck:
+      interval: 20s
+      retries: 10
+      test: curl -s http://localhost:8080/health
     volumes:
       - ./:/app
 
@@ -17,14 +20,14 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     ports:
-      - '22181:2181'
+      - '${DOCKER_PORT_ZOOKEEPER}:2181'
 
   kafka:
     image: confluentinc/cp-kafka:latest
     depends_on:
       - zookeeper
     ports:
-      - '29092:29092'
+      - '${DOCKER_PORT_KAFKA}:29092'
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -38,7 +41,7 @@ services:
     image: provectuslabs/kafka-ui:latest
     restart: always
     ports:
-      - '8088:8080'
+      - '${DOCKER_PORT_KAFKAUI}:8080'
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
@@ -52,7 +55,15 @@ services:
     volumes:
       - postgres:/var/lib/postgresql
     ports:
-      - "5432:5432"
+      - "${DOCKER_PORT_DATABASE_}:5432"
+
+  adminer:
+      image: adminer
+      restart: always
+      ports:
+        - "${DOCKER_PORT_ADMINDB}:8080"
+      networks:
+        - backend-api
   
 volumes:
   postgres:
