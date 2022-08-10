@@ -38,8 +38,9 @@ func NewSubscriberSplitter(commandBus command.CommandBus, groupID string, topic 
 
 func (s *subscriberSplitter) getKafkaReader(topic string) *kafka.Reader {
 	return kafka.NewReader(kafka.ReaderConfig{
-		Brokers:        s.brokers,
-		GroupID:        s.groupID,
+		Brokers: s.brokers,
+		GroupID: s.groupID,
+
 		Topic:          topic,
 		MinBytes:       1e6,  // 1MB
 		MaxBytes:       10e6, // 10MB
@@ -59,13 +60,13 @@ func (s *subscriberSplitter) ReadMessage(ctx context.Context) {
 		default:
 			msg, err := reader.FetchMessage(ctx)
 			if err != nil {
-				log.WithError(err).Error("error reading kafka messages")
+				log.WithError(err).Fatal("error reading kafka messages")
 				continue
 			}
 			payload := new(message)
 			err = json.Unmarshal(msg.Value, &payload)
 			if err != nil {
-				log.WithError(err).Error("error unmarshalling kafka messages")
+				log.WithError(err).Fatal("error unmarshalling kafka messages")
 				//TODO: agregar Time sleep
 				continue
 			}
@@ -74,7 +75,7 @@ func (s *subscriberSplitter) ReadMessage(ctx context.Context) {
 
 			err = s.commandBus.Dispatch(ctx, cmd)
 			if err != nil {
-				log.WithError(err).Error("error saving on import")
+				log.WithError(err).Fatal("error saving on import")
 				continue
 			}
 			//TODO: Validar si se guardo?
